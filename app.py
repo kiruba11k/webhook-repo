@@ -5,7 +5,10 @@ import json
 import hmac
 import hashlib
 import os
-from dotenv import load_dotenv  # Import python-dotenv to load .env file
+from dotenv import load_dotenv
+import signal
+import logging
+import time
 
 # Load environment variables from .env file
 load_dotenv()
@@ -21,10 +24,20 @@ events_collection = db['events']
 # GitHub webhook secret (retrieved from environment variables)
 GITHUB_SECRET = os.getenv("GITHUB_SECRET", 'your_webhook_secret')
 
+# Configure logging to help with error tracking
+logging.basicConfig(level=logging.INFO)
+
 def verify_signature(data, signature):
     """Verify the GitHub webhook signature using HMAC and the secret."""
     hmac_gen = hmac.new(GITHUB_SECRET.encode(), data, hashlib.sha256)
     return hmac.compare_digest(f"sha256={hmac_gen.hexdigest()}", signature)
+
+def handle_sigpipe(signum, frame):
+    """Ignore SIGPIPE errors."""
+    logging.warning("SIGPIPE caught and ignored")
+
+# Catch and ignore SIGPIPE errors
+signal.signal(signal.SIGPIPE, handle_sigpipe)
 
 @app.route('/')
 def index():
@@ -39,48 +52,56 @@ def webhook():
         abort(403)  # Forbidden if the signature is invalid
 
     if request.method == 'POST':
-        data = json.loads(request.data)
-        event_type = request.headers.get('X-GitHub-Event')
+        try:
+            data = json.loads(request.data)
+            event_type = request.headers.get('X-GitHub-Event')
 
-        if event_type == 'push':
-            # Using the commit hash as request_id
-            request_id = data['head_commit']['id']
-            author = data['pusher']['name']
-            to_branch = data['ref'].split('/')[-1]
-            timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+            if event_type == 'push':
+                request_id = data['head_commit']['id']
+                author = data['pusher']['name']
+                to_branch = data['ref'].split('/')[-1]
+                timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
 
-            event = {
-                'request_id': request_id,
-                'author': author,
-                'action': 'PUSH',
-                'from_branch': None,
-                'to_branch': to_branch,
-                'timestamp': timestamp
-            }
-            events_collection.insert_one(event)
+                event = {
+                    'request_id': request_id,
+                    'author': author,
+                    'action': 'PUSH',
+                    'from_branch': None,
+                    'to_branch': to_branch,
+                    'timestamp': timestamp
+                }
+                events_collection.insert_one(event)
 
-        elif event_type == 'pull_request':
-            action = data['action']
-            # Use PR ID as request_id
-            request_id = str(data['pull_request']['id'])
-            author = data['pull_request']['user']['login']
-            from_branch = data['pull_request']['head']['ref']
-            to_branch = data['pull_request']['base']['ref']
-            timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+            elif event_type == 'pull_request':
+                action = data['action']
+                request_id = str(data['pull_request']['id'])
+                author = data['pull_request']['user']['login']
+                from_branch = data['pull_request']['head']['ref']
+                to_branch = data['pull_request']['base']['ref']
+                timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
 
-            event_action = 'PULL_REQUEST' if action == 'opened' else 'MERGE'
+                event_action = 'PULL_REQUEST' if action == 'opened' else 'MERGE'
 
-            event = {
-                'request_id': request_id,
-                'author': author,
-                'action': event_action,
-                'from_branch': from_branch,
-                'to_branch': to_branch,
-                'timestamp': timestamp
-            }
-            events_collection.insert_one(event)
+                event = {
+                    'request_id': request_id,
+                    'author': author,
+                    'action': event_action,
+                    'from_branch': from_branch,
+                    'to_branch': to_branch,
+                    'timestamp': timestamp
+                }
+                events_collection.insert_one(event)
 
-        return jsonify({'message': 'Webhook received'}), 200
+            return jsonify({'message': 'Webhook received'}), 200
+
+        except (BrokenPipeError, ConnectionResetError) as e:
+            # Log and handle the broken pipe error gracefully
+            logging.error(f"Client disconnected: {e}")
+            return jsonify({'message': 'Client disconnected'}), 499  # 499 is a custom client disconnect code
+        except Exception as e:
+            # Handle other errors
+            logging.error(f"An error occurred: {e}")
+            return jsonify({'message': 'Error processing request'}), 500
 
 @app.route('/events', methods=['GET'])
 def get_events():
