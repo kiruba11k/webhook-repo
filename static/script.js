@@ -12,21 +12,36 @@ function fetchEvents() {
             eventsList.innerHTML = '';  // Clear previous list
 
             data.forEach(event => {
-                const li = document.createElement('li');
-                let eventText = '';
+                const tr = document.createElement('tr');
 
-                const formattedTimestamp = formatDate(event.timestamp);
+                const usernameTd = document.createElement('td');
+                usernameTd.textContent = event.author;
+
+                const actionTd = document.createElement('td');
+                let actionText = '';
 
                 if (event.action === 'PUSH') {
-                    eventText = `${event.author} pushed to ${event.to_branch} on ${formattedTimestamp}`;
+                    actionText = `pushed to ${event.to_branch}`;
                 } else if (event.action === 'PULL_REQUEST') {
-                    eventText = `${event.author} submitted a pull request from ${event.from_branch} to ${event.to_branch} on ${formattedTimestamp}`;
+                    actionText = `submitted a pull request from ${event.from_branch} to ${event.to_branch}`;
                 } else if (event.action === 'MERGE') {
-                    eventText = `${event.author} merged branch ${event.from_branch} to ${event.to_branch} on ${formattedTimestamp}`;
+                    actionText = `merged branch ${event.from_branch} to ${event.to_branch}`;
                 }
 
-                li.innerHTML = `<strong>${eventText}</strong>`;
-                eventsList.appendChild(li);
+                actionTd.textContent = actionText;
+
+                const explanationTd = document.createElement('td');
+                explanationTd.textContent = actionText;
+
+                const timeTd = document.createElement('td');
+                timeTd.textContent = formatDate(event.timestamp);
+
+                tr.appendChild(usernameTd);
+                tr.appendChild(actionTd);
+                tr.appendChild(explanationTd);
+                tr.appendChild(timeTd);
+
+                eventsList.appendChild(tr);
             });
         })
         .catch(error => console.error('Error fetching events:', error));
