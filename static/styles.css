@@ -8,7 +8,7 @@
 
 /* Basic styling for body and container */
 body {
-    background-color: #f0f2f5;
+    background-color: #f4f4f9;
     color: #333;
     font-size: 16px;
 }
@@ -26,12 +26,12 @@ header {
 
 header h1 {
     font-size: 2.5em;
-    color: #007bff;
+    color: #4a90e2;
     transition: color 0.3s ease;
 }
 
 header h1:hover {
-    color: #0056b3;
+    color: #357ABD;
 }
 
 /* Main section styling */
@@ -40,54 +40,39 @@ main {
     justify-content: center;
 }
 
-.events {
+.events-table {
     width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
-.events-list {
-    list-style: none;
-    padding: 0;
+.events-table thead {
+    background-color: #4a90e2;
+    color: #fff;
 }
 
-.event-card {
-    background: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-    padding: 20px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    animation: fadeIn 0.5s ease-in-out;
+.events-table th, .events-table td {
+    padding: 12px 15px;
+    text-align: left;
 }
 
-.event-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+.events-table th {
+    font-size: 1.1em;
 }
 
-.event-title {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 10px;
+.events-table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
 }
 
-.event-details {
+.events-table tbody tr:hover {
+    background-color: #e0e0e0;
+}
+
+.events-table td {
     font-size: 0.9em;
-    color: #555;
-}
-
-.event-action {
-    color: #007bff;
-    font-weight: bold;
-}
-
-.event-from, .event-to {
-    color: #0056b3;
-}
-
-.event-timestamp {
-    font-style: italic;
-    color: #999;
 }
 
 /* Footer styling */
@@ -98,13 +83,13 @@ footer {
 }
 
 footer a {
-    color: #007bff;
+    color: #4a90e2;
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
 footer a:hover {
-    color: #0056b3;
+    color: #357ABD;
     text-decoration: underline;
 }
 
@@ -118,19 +103,8 @@ footer a:hover {
         font-size: 2em;
     }
     
-    .event-card {
-        padding: 15px;
-    }
-}
-
-/* Animation for card appearance */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    .events-table th, .events-table td {
+        padding: 8px;
+        font-size: 0.8em;
     }
 }
