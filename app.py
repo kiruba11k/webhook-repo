@@ -40,7 +40,7 @@ def webhook():
     try:
         data = json.loads(request.data)
         event_type = request.headers.get('X-GitHub-Event')
-        timestamp = int(datetime.now(timezone.utc).timestamp()
+        timestamp = int(datetime.now(timezone.utc))
         
         event = {
             'timestamp': timestamp,
