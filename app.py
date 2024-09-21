@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template, abort
 from pymongo import MongoClient
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 import json
 import hmac
 import hashlib
@@ -63,7 +63,7 @@ def webhook():
 
 @app.route('/events', methods=['GET'])
 def get_events():
-    fifteen_seconds_ago = int((datetime.utcnow() - timedelta(seconds=15)).timestamp())
+    fifteen_seconds_ago = int((datetime.now(timezone.utc) - timedelta(seconds=15)).timestamp())
     events = list(events_collection.find({'timestamp': {'$gte': fifteen_seconds_ago}}).sort('timestamp'))
     for event in events:
         event['_id'] = str(event['_id'])
