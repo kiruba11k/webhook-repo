@@ -64,7 +64,7 @@ def webhook():
 @app.route('/events', methods=['GET'])
 def get_events():
     fifteen_seconds_ago = int((datetime.utcnow() - timedelta(seconds=15)).timestamp())
-    events = list(events_collection.find({'timestamp': {'$gte': fifteen_seconds_ago}}).sort('timestamp', -1))
+    events = list(events_collection.find({'timestamp': {'$gte': fifteen_seconds_ago}}).sort('timestamp'))
     for event in events:
         event['_id'] = str(event['_id'])
     return jsonify(events), 200
